@@ -44,6 +44,9 @@ namespace Cactbot {
     private string language_ = null;
     private List<FileSystemWatcher> watchers;
 
+    private bool self_combat = false;
+    private bool end_combat = false;
+
     public delegate void GameExistsHandler(JSEvents.GameExistsEvent e);
     public event GameExistsHandler OnGameExists;
 
@@ -318,7 +321,7 @@ namespace Cactbot {
       // * Some overlays behave slightly different from the above explanation. Raidboss for example loads data files
       //   in addition to the listed steps. I think it's even loading them twice since raidboss.js loads the data files
       //   for gTimelineController and popup-text.js requests them again for its own purposes.
-     
+
       bool game_exists = ffxiv_.FindProcess();
       if (game_exists != notify_state_.game_exists) {
         notify_state_.game_exists = game_exists;
@@ -336,9 +339,29 @@ namespace Cactbot {
         return kUberSlowTimerMilli;
       }
 
+      DateTime now = DateTime.Now;
       // onInCombatChangedEvent: Fires when entering or leaving combat.
       bool in_act_combat = Advanced_Combat_Tracker.ActGlobals.oFormActMain.InCombat;
       bool in_game_combat = ffxiv_.GetInGameCombat();
+      if (Config.ACTFollowsIngameEncounters) {
+        if (in_game_combat && !self_combat) {
+          self_combat = true;
+        }
+        if (in_act_combat && !in_game_combat && self_combat && !end_combat) {
+          notify_state_.time_combat_ended = now;
+          end_combat = true;
+          self_combat = false;
+        }
+        TimeSpan diff = now.Subtract(notify_state_.time_combat_ended);
+        if (!self_combat && end_combat && (diff > TimeSpan.FromSeconds(Config.ACTFollowsIngameEncountersSeconds))) {
+          Advanced_Combat_Tracker.ActGlobals.oFormActMain.EndCombat(true);
+          //LogInfo("end combat after: " + diff.TotalSeconds + "s");
+          end_combat = false;
+        } else if (in_game_combat) {
+          end_combat = false;
+        }
+      }
+
       if (!notify_state_.in_act_combat.HasValue || in_act_combat != notify_state_.in_act_combat ||
           !notify_state_.in_game_combat.HasValue || in_game_combat != notify_state_.in_game_combat) {
         notify_state_.in_act_combat = in_act_combat;
@@ -353,7 +376,6 @@ namespace Cactbot {
         OnZoneChanged(new JSEvents.ZoneChangedEvent(zone_name));
       }
 
-      DateTime now = DateTime.Now;
       // The |player| can be null, such as during a zone change.
       FFXIVProcess.EntityData player = ffxiv_.GetSelfData();
       // The |target| can be null when no target is selected.
@@ -674,6 +696,7 @@ namespace Cactbot {
       public bool game_active = false;
       public bool? in_act_combat;
       public bool? in_game_combat;
+      public DateTime time_combat_ended = DateTime.MaxValue;
       public bool dead = false;
       public string zone_name = null;
       public JObject job_data = new JObject();

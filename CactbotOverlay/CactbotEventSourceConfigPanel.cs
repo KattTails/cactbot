@@ -20,6 +20,10 @@ namespace Cactbot {
     private void SetupControlProperties() {
       this.textUserConfigFile.Text = config.UserConfigFile;
       this.checkWatchFileChanges.Checked = config.WatchFileChanges;
+      this.checkACTFollowsIngameEncounters.Checked = config.ACTFollowsIngameEncounters;
+      this.checkACTFollowsIngameEncountersSeconds.Checked = config.ACTFollowsIngameEncountersDelay;
+      this.numericACTFollowsIngameEncountersSeconds.Enabled = config.ACTFollowsIngameEncountersDelay;
+      this.numericACTFollowsIngameEncountersSeconds.Value = config.ACTFollowsIngameEncountersSeconds;
     }
 
     private void SetupConfigEventHandlers() {
@@ -66,6 +70,19 @@ namespace Cactbot {
     private void checkWatchFileChanges_CheckedChanged(object sender, EventArgs e)
     {
       this.config.WatchFileChanges = this.checkWatchFileChanges.Checked;
+    }
+
+    private void checkACTEndEncountersByIngame_CheckedChanged(object sender, EventArgs e) {
+      this.config.ACTFollowsIngameEncounters = this.checkACTFollowsIngameEncounters.Checked;
+    }
+
+    private void checkACTFollowsIngameEncountersSeconds_CheckedChanged(object sender, EventArgs e) {
+      this.config.ACTFollowsIngameEncountersDelay = true;
+      this.numericACTFollowsIngameEncountersSeconds.Enabled = this.checkACTFollowsIngameEncountersSeconds.Checked;
+    }
+
+    private void numericACTFollowsIngameEncountersSeconds_ValueChanged(object sender, EventArgs e) {
+      this.config.ACTFollowsIngameEncountersSeconds = (uint)this.numericACTFollowsIngameEncountersSeconds.Value;
     }
   }
 }

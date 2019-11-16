@@ -54,6 +54,17 @@ namespace Cactbot {
         if (obj.TryGetValue("WatchFileChanges", out value)) {
           result.WatchFileChanges = value.ToObject<bool>();
         }
+
+        if (obj.TryGetValue("ACTFollowsIngameEncounters", out value)) {
+          result.ACTFollowsIngameEncounters = value.ToObject<bool>();
+        }
+
+        if (obj.TryGetValue("ACTFollowsIngameEncountersDelay", out value)) {
+          result.ACTFollowsIngameEncountersDelay = value.ToObject<bool>();
+        }
+        if (obj.TryGetValue("ACTFollowsIngameEncountersSeconds", out value)) {
+          result.ACTFollowsIngameEncountersSeconds = value.ToObject<uint>();
+        }
       }
 
       return result;
@@ -81,5 +92,8 @@ namespace Cactbot {
         }
       }
     }
+    public bool ACTFollowsIngameEncounters = false;
+    public bool ACTFollowsIngameEncountersDelay = false;
+    public uint ACTFollowsIngameEncountersSeconds = 0;
   }
 }
