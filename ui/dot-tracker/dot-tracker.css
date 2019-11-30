@@ -1,0 +1,24 @@
+#dot-hot-container {
+    position: relative;
+    top: 0px;
+    width: 100%;
+    height: 100%;
+}
+
+/* Relative to #bars */
+#dot-ticker, #hot-ticker {
+    height: 20px;
+    margin-top: 0px;
+}
+
+.bar-border-color {
+    background-color: rgb(30, 30, 30);
+}
+
+.dot-tick-color {
+    background-color: rgb(255, 0, 110);
+}
+
+.hot-tick-color {
+    background-color: rgb(182, 255, 0);
+}
