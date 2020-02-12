@@ -88,5 +88,62 @@ namespace Cactbot {
         }
       }
     }
+
+    [JsonIgnore]
+    public bool ACTFollowsIngameEncounters {
+      get {
+        if (!OverlayData.TryGetValue("options", out JToken options))
+          return false;
+        var general = options["general"];
+        if (general == null)
+          return false;
+        var flag = general["ACTFollowsIngameEncounters"];
+        if (flag == null)
+          return false;
+        try {
+          return flag.ToObject<bool>();
+        } catch {
+          return false;
+        }
+      }
+    }
+
+    [JsonIgnore]
+    public bool ACTFollowsIngameEncountersResetOnCombatStart {
+      get {
+        if (!OverlayData.TryGetValue("options", out JToken options))
+          return false;
+        var general = options["general"];
+        if (general == null)
+          return false;
+        var flag = general["ACTFollowsIngameEncountersResetOnCombatStart"];
+        if (flag == null)
+          return false;
+        try {
+          return flag.ToObject<bool>();
+        } catch {
+          return false;
+        }
+      }
+    }
+
+    [JsonIgnore]
+    public int ACTFollowsIngameEncountersDelaySeconds {
+      get {
+        if (!OverlayData.TryGetValue("options", out JToken options))
+          return 5;
+        var general = options["general"];
+        if (general == null)
+          return 5;
+        var flag = general["ACTFollowsIngameEncountersDelay"];
+        if (flag == null)
+          return 5;
+        try {
+          return flag.ToObject<int>();
+        } catch {
+          return 5;
+        }
+      }
+    }
   }
 }

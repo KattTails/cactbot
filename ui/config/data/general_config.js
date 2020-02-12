@@ -38,5 +38,29 @@ UserConfig.registerOptions('general', {
       type: 'checkbox',
       default: false,
     },
+    {
+      id: 'ACTFollowsIngameEncounters',
+      name: {
+        en: 'ACT encouters follow in-game combat status',
+      },
+      type: 'checkbox',
+      default: false,
+    },
+    {
+      id: 'ACTFollowsIngameEncountersResetOnCombatStart',
+      name: {
+        en: 'Start new encounter upon entering combat',
+      },
+      type: 'checkbox',
+      default: false,
+    },
+    {
+      id: 'ACTFollowsIngameEncountersDelay',
+      name: {
+        en: 'delay before ending ACT encounter after leaving in-game combat',
+      },
+      type: 'integer',
+      default: 5,
+    },
   ],
 });
