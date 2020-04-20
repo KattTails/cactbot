@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Threading;
 using Advanced_Combat_Tracker;
 using FFXIV_ACT_Plugin.Common;
 using System.Linq;
@@ -10,7 +11,12 @@ using System.Diagnostics;
 namespace Cactbot {
   public class FateWatcher {
     private CactbotEventSource client_;
+    private string language_;
     private IDataSubscription subscription;
+
+    private const bool debugPrint = true;
+    private static Stopwatch timerUpdate;
+    private int likelyUpdateOPCode;
 
     private Type MessageType = null;
     private Type ActorControl143 = null;
@@ -26,9 +32,16 @@ namespace Cactbot {
     // fates<fateID, progress>
     private static ConcurrentDictionary<int, int> fates;
 
-    public FateWatcher(CactbotEventSource client) {
+    public FateWatcher(CactbotEventSource client, string lang) {
       client_ = client;
+      language_ = lang;
       fates = new ConcurrentDictionary<int, int>();
+
+      if (debugPrint) {
+        timerUpdate = new Stopwatch();
+        timerUpdate.Start();
+        likelyUpdateOPCode = 0;
+      }
 
       var FFXIV = ActGlobals.oFormActMain.ActPlugins.FirstOrDefault(x => x.lblPluginTitle.Text == "FFXIV_ACT_Plugin.dll");
       if (FFXIV != null && FFXIV.pluginObj != null) {
@@ -124,36 +137,118 @@ namespace Cactbot {
 
     public unsafe void ProcessMessage(byte* buffer, byte[] message) {
       int a = *((int*)&buffer[Category_Offset]);
-      switch (a) {
-        // Fate Start: 0x935
-        // param1: fateID
-        // param2: unknown
-        case 0x935: {
-          AddFate(*(int*)&buffer[Param1_Offset]);
-          break;
+      if (debugPrint) {
+        int para1 = *((int*)&buffer[Param1_Offset]);
+        int para2 = *(int*)&buffer[Param2_Offset];
+        if (a > 0 && a < 65535) {
+          if (para1 >= 120 && para1 < 2000 && para2 == 0 && likelyUpdateOPCode > 0 && !a.Equals(likelyUpdateOPCode)) {
+            client_.LogInfo("Possible add/remove OPCode: " + Convert.ToString(a, 16) + " - FateID: " + para1);
+          };
+          if (para1 >= 120 && para1 < 2000 && para2 >= 0 && para2 <= 100 && (timerUpdate.ElapsedMilliseconds > 10000)) {
+            timerUpdate.Restart();
+            likelyUpdateOPCode = a;
+            client_.LogInfo("Likely update OPCode: " + Convert.ToString(a, 16) + " - FateID: " + para1 + ", Progress: " + para2);
+          };
         };
+      };
 
-        // Fate End: 0x936
-        // param1: fateID
-        case 0x936: {
-          RemoveFate(*(int*)&buffer[Param1_Offset]);
-          break;
-        };
+      if (language_ == "ko") {
+        switch (a) {
+          // Fate Start: 0x74
+          // param1: fateID
+          // param2: unknown
+          case 0x74: {
+            AddFate(*(int*)&buffer[Param1_Offset]);
+            break;
+          };
 
-        // Fate Progress: 0x93E
-        // param1: fateID
-        // param2: progress (0-100)
-        case 0x93E: {
-          int param1 = *(int*)&buffer[Param1_Offset];
-          int param2 = *(int*)&buffer[Param2_Offset];
-          if (!fates.ContainsKey(param1)) {
-            AddFate(param1);
+          // Fate End: 0x79
+          // param1: fateID
+          case 0x79: {
+            RemoveFate(*(int*)&buffer[Param1_Offset]);
+            break;
+          };
+
+          // Fate Progress: 0x9B
+          // param1: fateID
+          // param2: progress (0-100)
+          case 0x9B: {
+            int param1 = *(int*)&buffer[Param1_Offset];
+            int param2 = *(int*)&buffer[Param2_Offset];
+            if (!fates.ContainsKey(param1)) {
+              AddFate(param1);
+            }
+            if (fates[param1] != param2) {
+              UpdateFate(param1, param2);
+            }
+            break;
           }
-          if (fates[param1] != param2) {
-            UpdateFate(param1, param2);
-          }
-          break;
         }
+      } else if (language_ == "cn") {
+        switch (a) {
+          // Fate Start: 0x935
+          // param1: fateID
+          // param2: unknown
+          case 0x935: {
+            AddFate(*(int*)&buffer[Param1_Offset]);
+            break;
+          };
+
+          // Fate End: 0x936
+          // param1: fateID
+          case 0x936: {
+            RemoveFate(*(int*)&buffer[Param1_Offset]);
+            break;
+          };
+
+          // Fate Progress: 0x93E
+          // param1: fateID
+          // param2: progress (0-100)
+          case 0x93E: {
+            int param1 = *(int*)&buffer[Param1_Offset];
+            int param2 = *(int*)&buffer[Param2_Offset];
+            if (!fates.ContainsKey(param1)) {
+              AddFate(param1);
+            }
+            if (fates[param1] != param2) {
+              UpdateFate(param1, param2);
+            }
+            break;
+          }
+        }
+      } else {
+        switch (a) {
+          // Fate Start: 0x935
+          // param1: fateID
+          // param2: unknown
+          case 0x935: {
+            AddFate(*(int*)&buffer[Param1_Offset]);
+            break;
+          };
+
+          // Fate End: 0x936
+          // param1: fateID
+          case 0x936: {
+            RemoveFate(*(int*)&buffer[Param1_Offset]);
+            break;
+          };
+
+          // Fate Progress: 0x93E
+          // param1: fateID
+          // param2: progress (0-100)
+          case 0x93E: {
+            int param1 = *(int*)&buffer[Param1_Offset];
+            int param2 = *(int*)&buffer[Param2_Offset];
+            if (!fates.ContainsKey(param1)) {
+              AddFate(param1);
+            }
+            if (fates[param1] != param2) {
+              UpdateFate(param1, param2);
+            }
+            break;
+          }
+        }
+      
       }
     }
 
