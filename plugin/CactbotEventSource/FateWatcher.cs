@@ -150,7 +150,7 @@ namespace Cactbot {
           if (para1 >= 120 && para1 < 2000 && para2 == 0 && likelyUpdateOPCode > 0 && !a.Equals(likelyUpdateOPCode)) {
             client_.LogInfo("Possible add/remove OPCode: " + Convert.ToString(a, 16) + " - FateID: " + para1);
           };
-          if (para1 >= 120 && para1 < 2000 && para2 >= 0 && para2 <= 100 && (timerUpdate.ElapsedMilliseconds > 10000)) {
+          if (para1 >= 120 && para1 < 2000 && para2 > 0 && para2 <= 100 && (timerUpdate.ElapsedMilliseconds > 10000)) {
             timerUpdate.Restart();
             likelyUpdateOPCode = a;
             client_.LogInfo("Likely update OPCode: " + Convert.ToString(a, 16) + " - FateID: " + para1 + ", Progress: " + para2);
