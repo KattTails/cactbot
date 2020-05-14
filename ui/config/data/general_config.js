@@ -41,5 +41,29 @@ UserConfig.registerOptions('general', {
       type: 'checkbox',
       default: false,
     },
+    {
+      id: 'ACTFollowsIngameEncounters',
+      name: {
+        en: 'End ACT encounter based on FFXIV combat status',
+      },
+      type: 'checkbox',
+      default: false,
+    },
+    {
+      id: 'ACTFollowsIngameEncountersResetOnCombatStart',
+      name: {
+        en: 'Start new ACT encounter upon entering combat in FFXIV',
+      },
+      type: 'checkbox',
+      default: false,
+    },
+    {
+      id: 'ACTFollowsIngameEncountersDelay',
+      name: {
+        en: 'delay before ending ACT encounter after leaving combat in FFXIV',
+      },
+      type: 'integer',
+      default: 5,
+    },
   ],
 });

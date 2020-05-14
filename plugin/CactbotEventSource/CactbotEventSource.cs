@@ -40,6 +40,13 @@ namespace Cactbot {
     // When true, the update function should reset notify state back to defaults.
     private bool reset_notify_state_ = false;
 
+    /*// Flags for controlling the end combat states
+    private bool self_combat = false;
+    private bool end_combat = false;*/
+
+    // Used to show that we left combat and are waiting <delay> second(s) to end ACTs encounter.
+    public bool can_end_encounter;
+
     private System.Timers.Timer fast_update_timer_;
     // Held while the |fast_update_timer_| is running.
     private FFXIVProcess ffxiv_;
@@ -381,9 +388,40 @@ namespace Cactbot {
         return kUberSlowTimerMilli;
       }
 
+      DateTime now = DateTime.Now;
       // onInCombatChangedEvent: Fires when entering or leaving combat.
       bool in_act_combat = Advanced_Combat_Tracker.ActGlobals.oFormActMain.InCombat;
       bool in_game_combat = ffxiv_.GetInGameCombat();
+
+      if (Config.ACTFollowsIngameEncounters) {
+        bool should_end_encounter = false;
+
+        if (notify_state_.time_combat_ended.HasValue) {
+          TimeSpan delay = TimeSpan.FromSeconds(Config.ACTFollowsIngameEncountersDelaySeconds);
+          TimeSpan since_combat_ended = now.Subtract(notify_state_.time_combat_ended.Value);
+          should_end_encounter = since_combat_ended > delay;
+        }
+
+        if (notify_state_.in_game_combat.HasValue) {
+          if (in_game_combat && !notify_state_.in_game_combat.Value) {
+            // We just entered combat
+            if (Config.ACTFollowsIngameEncountersResetOnCombatStart)
+              ActGlobals.oFormActMain.EndCombat(true);
+            notify_state_.time_combat_ended = null;
+          }
+          else if (!in_game_combat && notify_state_.in_game_combat.Value && in_act_combat) {
+            // Save the time when we first left combat
+            notify_state_.time_combat_ended = now;
+          }
+          else if (notify_state_.time_combat_ended.HasValue && should_end_encounter && in_act_combat) {
+            // We just left combat and it's been <delay> second(s)
+            ActGlobals.oFormActMain.EndCombat(true);
+            LogInfo(should_end_encounter.ToString() + 's');
+            notify_state_.time_combat_ended = null;
+          }
+        }
+      }
+
       if (!notify_state_.in_act_combat.HasValue || in_act_combat != notify_state_.in_act_combat ||
           !notify_state_.in_game_combat.HasValue || in_game_combat != notify_state_.in_game_combat) {
         notify_state_.in_act_combat = in_act_combat;
@@ -398,7 +436,6 @@ namespace Cactbot {
         OnZoneChanged(new JSEvents.ZoneChangedEvent(zone_name));
       }
 
-      DateTime now = DateTime.Now;
       // The |player| can be null, such as during a zone change.
       FFXIVProcess.EntityData player = ffxiv_.GetSelfData();
       // The |target| can be null when no target is selected.
@@ -786,6 +823,7 @@ namespace Cactbot {
       public bool game_active = false;
       public bool? in_act_combat;
       public bool? in_game_combat;
+      public DateTime? time_combat_ended = null;
       public bool dead = false;
       public string zone_name = null;
       public JObject job_data = new JObject();
