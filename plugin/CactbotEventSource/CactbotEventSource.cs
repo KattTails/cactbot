@@ -40,10 +40,6 @@ namespace Cactbot {
     // When true, the update function should reset notify state back to defaults.
     private bool reset_notify_state_ = false;
 
-    /*// Flags for controlling the end combat states
-    private bool self_combat = false;
-    private bool end_combat = false;*/
-
     // Used to show that we left combat and are waiting <delay> second(s) to end ACTs encounter.
     public bool can_end_encounter;
 
